@@ -80,15 +80,15 @@ def read_lsg_nodes(ds_bytes, version=JtVersion.V9d5) -> dict:
         elif e_header.object_type_id == MetaDataNodeElement.TYPE_ID:
             node_data = MetaDataNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == PartNodeElement.TYPE_ID:
-            node_data = PartNodeElement.from_bytes(ds_bytes, header=e_header)
+            node_data = PartNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == RangeLODNodeElement.TYPE_ID:
-            node_data = RangeLODNodeElement.from_bytes(ds_bytes, header=e_header)
+            node_data = RangeLODNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == GroupNodeElement.TYPE_ID:
-            node_data = GroupNodeElement.from_bytes(ds_bytes, header=e_header)
+            node_data = GroupNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == TriStripSetShapeNodeElement.TYPE_ID:
-            node_data = TriStripSetShapeNodeElement.from_bytes(ds_bytes, header=e_header)
+            node_data = TriStripSetShapeNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == MaterialAttributeElement.TYPE_ID:
-            node_data = MaterialAttributeElement.from_bytes(ds_bytes, header=e_header)
+            node_data = MaterialAttributeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == ElementHeader.END_OF_ELEMENTS:
             print("End of Elements reached")
             end_of_elements = True
@@ -111,8 +111,10 @@ def read_lsg_props(ds_bytes) -> dict:
     props = {}
     while ds_bytes.remaining() > 0 and not end_of_elements:
         e_header = ElementHeader.from_bytes(ds_bytes)
+        # save offset/ read head position to realign after element read
+        read_head = ds_bytes.offset
         prop = None
-        # print(f'node {element_idx} has type {e_header.object_type_id}')
+        #print(f'node {element_idx} has type {e_header.object_type_id}')
         if e_header.object_type_id == LateLoadedPropertyAtom.TYPE_ID:
             prop = LateLoadedPropertyAtom.from_bytes(ds_bytes, header=e_header)
         elif e_header.object_type_id == FloatingPointPropertyAtom.TYPE_ID:
@@ -125,6 +127,9 @@ def read_lsg_props(ds_bytes) -> dict:
         else:
             print(f'element type {e_header.object_type_id} not implemented')
             break
+        #realign read position to mitigate propagation of offset errors between elements
+        ds_bytes.offset = read_head
+        ds_bytes.read(e_header.length - 21)
         props[e_header.object_id] = prop
     return props
 
@@ -134,7 +139,7 @@ def read_property_table(ds_bytes) -> list:
     logger.debug(f'{pt_version_number=}, {element_property_table_count=}')
     property_table = []
     i = 1
-    while ds_bytes.remaining() >= 12:  # and i < element_property_table_count:
+    while ds_bytes.remaining() >= 12 and i < element_property_table_count:
         element_object_id = struct.unpack("i", ds_bytes.read(4))[0]
         has_keys = True
         while has_keys:

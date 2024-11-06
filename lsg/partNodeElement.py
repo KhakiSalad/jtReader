@@ -27,7 +27,7 @@ class PartNodeElement(LSGNode):
 
     @classmethod
     def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
-        metadata_node_data = MetaDataNodeData.from_bytes(e_bytes)
+        metadata_node_data = MetaDataNodeData.from_bytes(e_bytes, version=version)
         if version == JtVersion.V9d5:
             version_number, res = struct.unpack("<hi", e_bytes.read(6))
         elif version == JtVersion.V10d5:

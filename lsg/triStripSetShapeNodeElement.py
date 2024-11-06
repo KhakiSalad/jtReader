@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.types import GUID
+from jt_reader.lsg.types import GUID, JtVersion
 from jt_reader.lsg.vertexShapeData import VertexShapeData
 from jt_reader.lsg.lsgNode import LSGNode
 
@@ -23,5 +23,6 @@ class TriStripSetShapeNodeElement(LSGNode):
         return self.vertex_shape_data.base_shape_data.base_node_data.attr_object_id
 
     @classmethod
-    def from_bytes(cls, e_bytes, header=None):
-        return TriStripSetShapeNodeElement(header, VertexShapeData.from_bytes(e_bytes))
+    def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
+        print("TriStripSetShapeNodeElement ---------------------- " + str(version))
+        return TriStripSetShapeNodeElement(header, VertexShapeData.from_bytes(e_bytes, version=version))

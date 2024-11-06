@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from jt_reader.lsg.elementHeader import ElementHeader
 from jt_reader.lsg.lodNodeData import LODNodeData
-from jt_reader.lsg.types import GUID, VecF32, CoordF32
+from jt_reader.lsg.types import GUID, VecF32, CoordF32, JtVersion
 from jt_reader.lsg.lsgNode import LSGNode
 
 
@@ -27,8 +27,8 @@ class RangeLODNodeElement(LSGNode):
         return self.lod_node_data.group_node_data.base_node_data.attr_object_id
 
     @classmethod
-    def from_bytes(cls, e_bytes, header=None):
-        lod_node_data = LODNodeData.from_bytes(e_bytes)
+    def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
+        lod_node_data = LODNodeData.from_bytes(e_bytes, version=version)
         version_number = struct.unpack("h", e_bytes.read(2))[0]
         range_limit = VecF32.from_bytes(e_bytes)
         center = CoordF32(*struct.unpack("fff", e_bytes.read(12)))

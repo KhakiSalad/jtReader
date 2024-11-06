@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from jt_reader.lsg.elementHeader import ElementHeader
 from jt_reader.lsg.baseAttributeData import BaseAttributeData
-from jt_reader.lsg.types import GUID
+from jt_reader.lsg.types import GUID, JtVersion
 from jt_reader.lsg.lsgNode import LSGNode
 
 
@@ -32,9 +32,12 @@ class MaterialAttributeElement(LSGNode):
         return []
 
     @classmethod
-    def from_bytes(cls, e_bytes, header=None):
+    def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
         base_attribute_data = BaseAttributeData.from_bytes(e_bytes)
-        version_number, data_flags = struct.unpack("<hH", e_bytes.read(4))
+        if version == JtVersion.V9d5:
+            version_number, data_flags = struct.unpack("<hH", e_bytes.read(4))
+        else: 
+            version_number, data_flags = struct.unpack("<BH", e_bytes.read(3))
         ambient_color = struct.unpack("ffff", e_bytes.read(16))
         diffuse_color_and_alpha = struct.unpack("ffff", e_bytes.read(16))
         specular_color = struct.unpack("ffff", e_bytes.read(16))

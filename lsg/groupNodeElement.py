@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from jt_reader.lsg.elementHeader import ElementHeader
 from jt_reader.lsg.groupNodeData import GroupNodeData
-from jt_reader.lsg.types import GUID
+from jt_reader.lsg.types import GUID, JtVersion
 from jt_reader.lsg.lsgNode import LSGNode
 
 
@@ -27,5 +27,5 @@ class GroupNodeElement(LSGNode):
         return self.group_node_data.base_node_data.attr_object_id
 
     @classmethod
-    def from_bytes(cls, e_bytes, header=None):
-        return GroupNodeElement(header, GroupNodeData.from_bytes(e_bytes))
+    def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
+        return GroupNodeElement(header, GroupNodeData.from_bytes(e_bytes, version=version))
