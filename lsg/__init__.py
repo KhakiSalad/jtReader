@@ -5,4 +5,6 @@ from .partNodeElement import PartNodeElement
 from .partitionNodeElement import PartitionNodeElement
 from .rangeLODNodeElement import RangeLODNodeElement
 from .groupNodeElement import GroupNodeElement
+from .pointSetShapeNodeElement import PointSetShapeNodeElement
+from .polylineSetShapeNodeElement import PolylineSetShapeNodeElement
 from .lsg import LSG

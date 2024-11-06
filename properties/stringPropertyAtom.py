@@ -2,7 +2,7 @@ import struct
 from dataclasses import dataclass
 
 from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.types import GUID
+from jt_reader.lsg.types import GUID, JtVersion
 from jt_reader.properties.basePropertyAtomData import BasePropertyAtomData
 from jt_reader.properties.lsgProperty import LSGProperty
 
@@ -21,9 +21,12 @@ class StringPropertyAtom(LSGProperty):
         return self.value
 
     @classmethod
-    def from_bytes(cls, e_bytes, header=None):
-        base_property_atom_data = BasePropertyAtomData.from_bytes(e_bytes)
-        version_number = struct.unpack("<h", e_bytes.read(2))[0]
+    def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
+        base_property_atom_data = BasePropertyAtomData.from_bytes(e_bytes, version=version)
+        if version == JtVersion.V9d5:
+            version_number = struct.unpack("<h", e_bytes.read(2))[0]
+        else:
+            version_number = struct.unpack("B", e_bytes.read(1))[0]
         s_len = struct.unpack("i", e_bytes.read(4))[0]
         value = e_bytes.read(s_len * 2).decode('utf-16')
         return StringPropertyAtom(header, base_property_atom_data, version_number, value)

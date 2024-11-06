@@ -4,14 +4,17 @@ from jt_reader import load_jt
 from jt_reader.lsg.lsgNode import LSGNode
 from jt_reader.properties import LateLoadedPropertyAtom
 from jt_reader.load_jt import toc_entries_to_df
+from jt_reader.logging_config import configure_logging
+import argparse
+import logging
+logger=logging.getLogger(__name__)
 
-toc = load_jt.read_table_of_contents(load_jt.PATH)
-toc_df = toc_entries_to_df(toc).sort_values(by="Offset")
-lsg = load_jt.read_segment(load_jt.PATH, toc_df.iloc[0].Offset)
+global PATH
+
 app = Dash(__name__)
 
-
 def get_tree(node: LSGNode):
+    global PATH
     def flatten_node(n):
         return list(load_jt.flatten_lsg_nodes([n]))[0]
 
@@ -52,13 +55,15 @@ def get_tree(node: LSGNode):
         late_loaded = filter(lambda k: isinstance(node.properties[k], LateLoadedPropertyAtom), node.properties.keys())
         for k in late_loaded:
             ll_segment_id = node.properties[k].segment_id
-            ll_entry = list(filter(lambda entry: entry.guid == ll_segment_id, toc))[0]
-            ll_data = load_jt.read_segment(load_jt.PATH, ll_entry.offset)
-            if ll_entry.type == load_jt.DATA_SEGMENT_TYPES[3]:
-                # add metadata properties to node properties
-                del props[k]
-                for k_n in ll_data.data[0].properties.keys():
-                    props[k+'_'+k_n] = ll_data.data[0].properties[k_n]
+            ll_entry = list(filter(lambda entry: entry.guid == ll_segment_id, toc))
+            if len(ll_entry) > 0:
+                ll_entry = ll_entry[0]
+                ll_data = load_jt.read_segment(PATH, ll_entry.offset)
+                if ll_entry.type == load_jt.DATA_SEGMENT_TYPES[3]:
+                    # add metadata properties to node properties
+                    del props[k]
+                    for k_n in ll_data.data[0].properties.keys():
+                        props[k+'_'+k_n] = ll_data.data[0].properties[k_n]
         node.properties = props
         node_props = html.Details([
             html.Summary(
@@ -105,7 +110,27 @@ def get_tree(node: LSGNode):
 
 
 
-app.layout = html.Div([
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Load a jt file")
+    parser.add_argument('version', metavar='v', type=int, nargs='?', help='version to load', default=10)
+    parser.add_argument('--debug', action="store_true")
+    args = parser.parse_args()
+    configure_logging(args.debug)
+    logger.info("Started")
+    logger.debug("showing debug information")
+
+    global PATH
+    if args.version == 9:
+        PATH = load_jt.PATH_9
+    else:
+        PATH = load_jt.PATH_10
+
+    toc = load_jt.read_table_of_contents(PATH)
+    toc_df = toc_entries_to_df(toc).sort_values(by="Offset")
+    lsg = load_jt.read_segment(PATH, toc_df.iloc[0].Offset)
+
+    app.layout = html.Div([
     html.H1(children='.jt Reader', style={'textAlign': 'center'}),
     html.H3(children='Table of Contents', style={'textAlign': 'center'}),
     dash_table.DataTable(
@@ -117,7 +142,5 @@ app.layout = html.Div([
     get_tree(lsg.rootNode),
     html.H3(children='Logical Scene Graph - Properties', style={'textAlign': 'center'}),
 
-], style={'font-family': 'monospace'})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    ], style={'font-family': 'monospace'})
+    app.run(debug=args.debug)

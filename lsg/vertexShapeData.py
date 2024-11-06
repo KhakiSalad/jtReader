@@ -16,7 +16,7 @@ class VertexShapeData:
 
     @classmethod
     def from_bytes(cls, e_bytes, version=JtVersion.V9d5):
-        print("VertexShapeData ---------------------- " + str(version))
+        # print("VertexShapeData ---------------------- " + str(version))
         base_shape_data = BaseShapeData.from_bytes(e_bytes, version=version)
         if version == JtVersion.V9d5:
             version_number, vertex_binding = struct.unpack("<hQ", e_bytes.read(10))

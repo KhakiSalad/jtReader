@@ -6,6 +6,9 @@ from jt_reader.lsg.groupNodeData import GroupNodeData
 from jt_reader.lsg.types import GUID, BBoxF32, JtVersion
 from jt_reader.lsg.lsgNode import LSGNode
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class PartitionNodeElement(LSGNode):
@@ -34,13 +37,13 @@ class PartitionNodeElement(LSGNode):
     def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
         # **** group node data ****
         group_node_data = GroupNodeData.from_bytes(e_bytes, version=version)
-        print(group_node_data)
+        # print(group_node_data)
         # **** partition flags ****
         partition_flags = struct.unpack("i", e_bytes.read(4))[0]
         # **** file name ****
         s_len = struct.unpack("i", e_bytes.read(4))[0]
         filename = e_bytes.read(2 * s_len).decode('utf-16')
-        print(filename)
+        logger.info(f"started loading file {filename}")
         # **** reservedField | Transformed BBox ****
         transformed_bbox = BBoxF32.from_coords(*struct.unpack("ffffff", e_bytes.read(24)))
         # **** Area ****

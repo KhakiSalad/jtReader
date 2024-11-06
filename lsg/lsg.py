@@ -3,12 +3,22 @@ import struct
 import sys
 from dataclasses import dataclass
 
-from jt_reader.lsg import PartitionNodeElement, MetaDataNodeElement, PartNodeElement, RangeLODNodeElement, \
-    GroupNodeElement, TriStripSetShapeNodeElement, MaterialAttributeElement
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.lsgNode import LSGNode
+from .metaDataNodeElement import MetaDataNodeElement
+from .partNodeElement import PartNodeElement 
+from .rangeLODNodeElement import RangeLODNodeElement 
+from .groupNodeElement import GroupNodeElement 
+from .triStripSetShapeNodeElement import TriStripSetShapeNodeElement 
+from .materialAttributeElement import MaterialAttributeElement 
+from .pointSetShapeNodeElement import PointSetShapeNodeElement 
+from .polylineSetShapeNodeElement import PolylineSetShapeNodeElement 
+from .partitionNodeElement import PartitionNodeElement
+from .instanceNodeElement import InstanceNodeElement
+from .elementHeader import ElementHeader
+from .lsgNode import LSGNode
+from .dummyNodeElement import DummyNodeElement
 from jt_reader.properties import LateLoadedPropertyAtom, FloatingPointPropertyAtom, StringPropertyAtom
-from jt_reader.lsg.types import JtVersion
+from jt_reader.properties.dummyPropertyAtom import DummyPropertyAtom
+from .types import JtVersion
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +54,12 @@ class LSG:
             object_id = row["object id"]
             key_id = row["key property atom"]
             val_id = row["value property atom"]
-            key = self.props[key_id].val
-            val = self.props[val_id].val
+            if self.props != None:
+                key = self.props[key_id].val
+                val = self.props[val_id].val
+            else:
+                val = -1
+                #TODO: DO SOMETHING FOR V10.5
             self.nodes[object_id].properties[key] = val
 
     def ascii_lsg_tree(self):
@@ -66,16 +80,17 @@ def read_lsg_nodes(ds_bytes, version=JtVersion.V9d5) -> dict:
     nodes = {}
     while ds_bytes.remaining() > 0 and not end_of_elements:
         e_header = ElementHeader.from_bytes(ds_bytes)
+
         # save offset/ read head position to realign after element read
         read_head = ds_bytes.offset
-        print(f'node {element_idx} has type {e_header.object_type_id}')
+        logger.debug(f'node {element_idx} has type {e_header.object_type_id}')
         if e_header.object_type_id == PartitionNodeElement.TYPE_ID:
             start = ds_bytes.offset
             node_data = PartitionNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
             end = ds_bytes.offset
             remaining = (end - start) - e_header.length
             if remaining > 0:
-                print(f"{remaining} bytes left for node, reading and discarding")
+                logger.debug(f"{remaining} bytes left for node, reading and discarding")
                 ds_bytes.read(remaining)
         elif e_header.object_type_id == MetaDataNodeElement.TYPE_ID:
             node_data = MetaDataNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
@@ -85,52 +100,69 @@ def read_lsg_nodes(ds_bytes, version=JtVersion.V9d5) -> dict:
             node_data = RangeLODNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == GroupNodeElement.TYPE_ID:
             node_data = GroupNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
+        elif e_header.object_type_id == InstanceNodeElement.TYPE_ID:
+            node_data = InstanceNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == TriStripSetShapeNodeElement.TYPE_ID:
             node_data = TriStripSetShapeNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == MaterialAttributeElement.TYPE_ID:
             node_data = MaterialAttributeElement.from_bytes(ds_bytes, header=e_header, version=version)
+        elif e_header.object_type_id == PointSetShapeNodeElement.TYPE_ID:
+            node_data = PointSetShapeNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
+        elif e_header.object_type_id == PolylineSetShapeNodeElement.TYPE_ID:
+            node_data = PolylineSetShapeNodeElement.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == ElementHeader.END_OF_ELEMENTS:
-            print("End of Elements reached")
+            logger.debug("End of Elements reached")
             end_of_elements = True
             node_data = None
         else:
-            print(f'Found unsupported element type {e_header.object_type_id} while reading LSG segment')
+            logger.warning(f'Found unsupported element type {e_header.object_type_id} while reading LSG segment')
             # ds_bytes.read(e_header.length - 21)
-            node_data = None
+            node_data = DummyNodeElement(e_header)
         if node_data is not None: 
             nodes[e_header.object_id] = node_data
+            #realign read position to mitigate propagation of offset errors between elements
+            ds_bytes.offset = read_head
+            ds_bytes.read(e_header.length - 21)
+        else:
+            #realign read position to mitigate propagation of offset errors between elements
+            ds_bytes.offset = read_head
+            ds_bytes.read(e_header.length - 16)
         element_idx += 1
-        #realign read position to mitigate propagation of offset errors between elements
-        ds_bytes.offset = read_head
-        ds_bytes.read(e_header.length - 21)
     return nodes
 
 
-def read_lsg_props(ds_bytes) -> dict:
+def read_lsg_props(ds_bytes, version=JtVersion.V9d5) -> dict:
     end_of_elements = False
     props = {}
+    element_idx = 0
     while ds_bytes.remaining() > 0 and not end_of_elements:
         e_header = ElementHeader.from_bytes(ds_bytes)
         # save offset/ read head position to realign after element read
         read_head = ds_bytes.offset
         prop = None
-        #print(f'node {element_idx} has type {e_header.object_type_id}')
+        logger.debug(f'prop {element_idx} has type {e_header.object_type_id}')
         if e_header.object_type_id == LateLoadedPropertyAtom.TYPE_ID:
-            prop = LateLoadedPropertyAtom.from_bytes(ds_bytes, header=e_header)
+            prop = LateLoadedPropertyAtom.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == FloatingPointPropertyAtom.TYPE_ID:
-            prop = FloatingPointPropertyAtom.from_bytes(ds_bytes, header=e_header)
+            prop = FloatingPointPropertyAtom.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == StringPropertyAtom.TYPE_ID:
-            prop = StringPropertyAtom.from_bytes(ds_bytes, header=e_header)
+            prop = StringPropertyAtom.from_bytes(ds_bytes, header=e_header, version=version)
         elif e_header.object_type_id == ElementHeader.END_OF_ELEMENTS:
-            # print("End of Elements reached")
+            logger.debug("end of elements reached")
             end_of_elements = True
         else:
-            print(f'element type {e_header.object_type_id} not implemented')
-            break
-        #realign read position to mitigate propagation of offset errors between elements
-        ds_bytes.offset = read_head
-        ds_bytes.read(e_header.length - 21)
-        props[e_header.object_id] = prop
+            prop = DummyPropertyAtom.from_bytes(None, header=e_header)
+            logger.warning(f'element type {e_header.object_type_id} not implemented')
+        if prop is not None: 
+            props[e_header.object_id] = prop
+            #realign read position to mitigate propagation of offset errors between elements
+            ds_bytes.offset = read_head
+            ds_bytes.read(e_header.length - 21)
+        else:
+            #realign read position to mitigate propagation of offset errors between elements
+            ds_bytes.offset = read_head
+            ds_bytes.read(e_header.length - 16)
+        element_idx += 1
     return props
 
 
@@ -144,7 +176,7 @@ def read_property_table(ds_bytes) -> list:
         has_keys = True
         while has_keys:
             key_property_atom_bytes = ds_bytes.read(4)
-            if key_property_atom_bytes == b'':
+            if len(key_property_atom_bytes) != 4:
                 has_keys = False
             else:
                 key_property_atom = struct.unpack("i", key_property_atom_bytes)[0]
@@ -164,7 +196,7 @@ def read_property_table(ds_bytes) -> list:
 def read_lsg_segment(ds_bytes, version=JtVersion.V9d5):
     # read data
     nodes = read_lsg_nodes(ds_bytes, version=version)
-    props = read_lsg_props(ds_bytes)
+    props = read_lsg_props(ds_bytes, version=version)
     property_table = read_property_table(ds_bytes)
     lsg = LSG(nodes, props, property_table)
     return lsg

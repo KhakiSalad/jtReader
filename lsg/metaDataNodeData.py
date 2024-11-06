@@ -12,7 +12,7 @@ class MetaDataNodeData:
 
     @classmethod
     def from_bytes(cls, e_bytes, version=JtVersion.V9d5):
-        print("meta data ---------------------- " + str(version))
+        # print("meta data ---------------------- " + str(version))
         group_node_data = GroupNodeData.from_bytes(e_bytes, version=version)
         if version == JtVersion.V9d5:
             version_number = struct.unpack("h", e_bytes.read(2))[0]

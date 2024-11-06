@@ -11,7 +11,6 @@ class ByteStream:
 
     def read(self, length: int):
         if self.offset + length >= len(self.bytes):
-            self.offset = len(self.bytes)
             return self.bytes[self.offset:]
         data = self.bytes[self.offset: self.offset + length]
         self.offset += length

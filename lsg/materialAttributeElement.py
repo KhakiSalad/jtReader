@@ -33,7 +33,7 @@ class MaterialAttributeElement(LSGNode):
 
     @classmethod
     def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
-        base_attribute_data = BaseAttributeData.from_bytes(e_bytes)
+        base_attribute_data = BaseAttributeData.from_bytes(e_bytes, version=version)
         if version == JtVersion.V9d5:
             version_number, data_flags = struct.unpack("<hH", e_bytes.read(4))
         else: 

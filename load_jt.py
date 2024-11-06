@@ -1,5 +1,6 @@
 # import knime.scripting.io as knio
 import dataclasses
+import argparse
 import logging
 import sys
 from typing import Final
@@ -21,8 +22,9 @@ from jt_reader.metadata.metadata import Metadata, read_metadata_segment
 from jt_reader.shape.shape import Shape, read_shape_segment
 from jt_reader.util.byteStream import ByteStream
 
-PATH: Final = r'8W8_827_605____PCA_TM__010_____HALTER_HKL_________150819______________.jt'
-PATH: Final = r'83H_837_461____PCA_TM__400_____HEBEGESTELL_VT_____HI_LEX_20220722_____.jt'
+PATH = ""
+PATH_9: Final = r'8W8_827_605____PCA_TM__010_____HALTER_HKL_________150819______________.jt'
+PATH_10: Final = r'83H_837_461____PCA_TM__400_____HEBEGESTELL_VT_____HI_LEX_20220722_____.jt'
 VERSION = JtVersion.unsupported
 logger = logging.getLogger(__name__)
 
@@ -105,7 +107,7 @@ def read_table_of_contents(path: str):
             VERSION = JtVersion.V10d5
         else:
             raise NotImplementedError(f"version {jt_version} not supported")
-        print(VERSION)
+        logger.info(f"reading jt file with version {VERSION}")
         # TODO: check byteorder
         jt_bo = int.from_bytes(jt.read(1), byteorder="little")
         jt_reserved = jt.read(4)
@@ -135,7 +137,6 @@ def read_segment(path, toc_entry_offset: int):
         ds_id = GUID.from_bytes(jt)
         ds_type, ds_len = struct.unpack("ii", jt.read(8))
 
-        print(VERSION)
         if DATA_SEGMENT_TYPES[ds_type - 1].compression:
             # only first element in segment
             if VERSION == JtVersion.V9d5:
@@ -158,7 +159,7 @@ def read_segment(path, toc_entry_offset: int):
         if ds_type == LSG.SEGMENT_TYPE_ID:
             return read_lsg_segment(ds_bytes, version=VERSION)
         elif ds_type == Metadata.SEGMENT_TYPE_ID:
-            return read_metadata_segment(ds_bytes)
+            return read_metadata_segment(ds_bytes, VERSION)
         elif ds_type == Shape.SEGMENT_TYPE_ID:
             return read_shape_segment(ds_bytes)
 
@@ -207,10 +208,20 @@ def flatten_lsg_nodes(lsg_nodes: list):
         }
 
 def main():
-    logging_config.configure_logging()
-    jt_toc = read_table_of_contents(PATH)
+    parser = argparse.ArgumentParser(description="Load a jt file")
+    parser.add_argument('version', metavar='v', type=int, nargs='?', help='version to load', default=10)
+    parser.add_argument('--debug', action="store_true")
+    args = parser.parse_args()
+    logging_config.configure_logging(args.debug)
+    logger.info("Started")
+    logger.debug("showing debug information")
 
-    # print(f'reding .jt file with version {version.strip()}')
+    if args.version == 9:
+        PATH = PATH_9
+    else:
+        PATH = PATH_10
+
+    jt_toc = read_table_of_contents(PATH)
 
     def is_lsg(toc_entry: TocEntry):
         return toc_entry.type.id == 1
@@ -222,9 +233,9 @@ def main():
     lsg_entry = lsg_entry[0]
 
     shape_entries = list(filter(is_shape, jt_toc))
-    logger.debug(f"starting to read lsg segment at {lsg_entry.offset}")
+    logger.info(f"starting to read lsg segment at {lsg_entry.offset}")
     lsg = read_segment(PATH, lsg_entry.offset)
-    logger.debug(f"finished read of lsg segment {lsg}")
+    logger.info(f"finished read of lsg segment {lsg}")
     print(lsg.ascii_lsg_tree())
 
     guid_shape_in_lsg = (
@@ -236,9 +247,9 @@ def main():
     print(shape_entries)
     # shape_entries = filter(lambda se: se.guid in guid_shape_in_lsg, shape_entries)
     for entry in shape_entries:
-        logger.debug(f"starting to read shape segment {entry.guid} at {entry.offset}")
+        logger.info(f"starting to read shape segment {entry.guid} at {entry.offset}")
         shapes.append(read_segment(PATH, entry.offset))
-        logger.debug(f"finished reading shape segment at {entry.offset}")
+        logger.info(f"finished reading shape segment at {entry.offset}")
     print(shapes)
     vtx = shapes[3][0].vertex_shape_LOD_data.topo_mesh_compressed_lod_data.topo_mesh_compressed_rep_data.topologically_compressed_vertex_records.compressed_vertex_coordinate_array
     vtx = vtx.vertex_coordinates
@@ -249,6 +260,7 @@ def main():
 
     ax.scatter(x, y, z)
     plt.show()
+    logger.info("Finished")
 
 
 if __name__ == "__main__":

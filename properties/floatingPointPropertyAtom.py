@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from jt_reader.properties.basePropertyAtomData import BasePropertyAtomData
 from jt_reader.lsg.elementHeader import ElementHeader
 from jt_reader.properties.lsgProperty import LSGProperty
-from jt_reader.lsg.types import GUID
+from jt_reader.lsg.types import GUID, JtVersion
 
 
 @dataclass
@@ -20,7 +20,11 @@ class FloatingPointPropertyAtom(LSGProperty):
         return self.value
 
     @classmethod
-    def from_bytes(cls, e_bytes, header=None):
-        base_property_atom_data = BasePropertyAtomData.from_bytes(e_bytes)
-        version_number, value = struct.unpack("<hf", e_bytes.read(6))
+    def from_bytes(cls, e_bytes, header=None,version=JtVersion.V9d5):
+        base_property_atom_data = BasePropertyAtomData.from_bytes(e_bytes,version=version)
+        if version == JtVersion.V9d5:
+            version_number = struct.unpack("h", e_bytes.read(2))[0]
+        else:
+            version_number = struct.unpack("B", e_bytes.read(1))[0]
+        value = struct.unpack("<f", e_bytes.read(4))
         return FloatingPointPropertyAtom(header, base_property_atom_data, version_number, value)

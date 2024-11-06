@@ -3,7 +3,7 @@ import struct
 from dataclasses import dataclass
 
 from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.types import GUID
+from jt_reader.lsg.types import GUID, JtVersion
 from jt_reader.metadata.metadataElement import MetadataElement
 
 
@@ -24,8 +24,11 @@ class PropertyProxyMetaDataElement(MetadataElement):
         return self._properties
 
     @classmethod
-    def from_bytes(cls, e_bytes, header=None):
-        version_number = struct.unpack("<h", e_bytes.read(2))[0]
+    def from_bytes(cls, e_bytes, header=None,version=JtVersion.V9d5):
+        if version == JtVersion.V9d5:
+            version_number = struct.unpack("<h", e_bytes.read(2))[0]
+        else:
+            version_number = struct.unpack("B", e_bytes.read(1))[0]
         properties = {}
         s_len = struct.unpack("i", e_bytes.read(4))[0]
         property_key = e_bytes.read(2 * s_len).decode('utf-16')

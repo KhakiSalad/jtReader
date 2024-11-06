@@ -24,5 +24,5 @@ class TriStripSetShapeNodeElement(LSGNode):
 
     @classmethod
     def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
-        print("TriStripSetShapeNodeElement ---------------------- " + str(version))
+        # print("TriStripSetShapeNodeElement ---------------------- " + str(version))
         return TriStripSetShapeNodeElement(header, VertexShapeData.from_bytes(e_bytes, version=version))

@@ -11,13 +11,13 @@ class Metadata:
     data: list[MetadataElement]
 
 
-def read_metadata_segment(ds_bytes):
+def read_metadata_segment(ds_bytes, version):
     metadata = []
     end_of_elements = False
     while ds_bytes.remaining() > 0 and not end_of_elements:
         e_header = ElementHeader.from_bytes(ds_bytes)
         if e_header.object_type_id == PropertyProxyMetaDataElement.TYPE_ID:
-            metadata.append(PropertyProxyMetaDataElement.from_bytes(ds_bytes, e_header))
+            metadata.append(PropertyProxyMetaDataElement.from_bytes(ds_bytes, e_header, version=version))
         elif e_header.object_type_id == ElementHeader.END_OF_ELEMENTS:
             end_of_elements = True
         else:
