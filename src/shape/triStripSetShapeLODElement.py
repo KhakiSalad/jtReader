@@ -2,10 +2,10 @@ import logging
 import struct
 from dataclasses import dataclass, field
 
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.types import GUID, JtVersion
-from jt_reader.shape.shapeElement import ShapeElement
-from jt_reader.shape.vertexShapeLODData import VertexShapeLODData
+from lsg.elementHeader import ElementHeader
+from lsg.types import GUID, JtVersion
+from shape.shapeElement import ShapeElement
+from shape.vertexShapeLODData import VertexShapeLODData
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,8 @@ class TriStripSetShapeLodElement(ShapeElement):
     using Late Loaded Property Atom Elements (see 7.2.1.1.1.10.3 Tri-Strip Set Shape Node Element and 0 Late Loaded
     Property Atom Element Late Loaded Property Atom Element respectively).
     """
-    TYPE_ID = GUID((0x10dd10ab, 0x2ac8, 0x11d1, 0x9b, 0x6b, 0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
+    TYPE_ID = GUID((0x10dd10ab, 0x2ac8, 0x11d1, 0x9b, 0x6b,
+                   0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
     element_header: ElementHeader
     vertex_shape_LOD_data: VertexShapeLODData = field(repr=False)
     version_number: int
@@ -35,17 +36,18 @@ class TriStripSetShapeLodElement(ShapeElement):
         logger.debug(f'creating {header} from bytes')
         os_begin = e_bytes.offset
 
-        vertex_shape_lod_data = VertexShapeLODData.from_bytes(e_bytes, shape="Tri-Strip", version=version)
-        if version==JtVersion.V9d5:
+        vertex_shape_lod_data = VertexShapeLODData.from_bytes(
+            e_bytes, shape="Tri-Strip", version=version)
+        if version == JtVersion.V9d5:
             version_number = struct.unpack("<h", e_bytes.read(2))[0]
-        elif version==JtVersion.unsupported:
+        elif version == JtVersion.unsupported:
             logger.critial("unsupported jt version")
             raise RuntimeError("unsupported jt version")
         else:
             version_number = struct.unpack("<B", e_bytes.read(1))[0]
 
-
         os_end = e_bytes.offset
         # e_bytes.read(6)
-        logger.debug(f'TriStripSetShapeLodElement read {os_end - os_begin} bytes of {header.length}')
+        logger.debug(
+            f'TriStripSetShapeLodElement read {os_end - os_begin} bytes of {header.length}')
         return TriStripSetShapeLodElement(header, vertex_shape_lod_data, version_number)

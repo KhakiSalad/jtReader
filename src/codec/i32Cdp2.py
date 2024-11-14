@@ -3,12 +3,13 @@ import logging
 import math
 import struct
 
-from jt_reader.codec.bitlength import decode_bitlength2
-from jt_reader.codec.codecDriver import CodecDriver
-from jt_reader.codec.arithmetic import ProbabilityContext, decode_arithmetic
-from jt_reader.util.byteStream import ByteStream
+from codec.bitlength import decode_bitlength2
+from codec.codecDriver import CodecDriver
+from codec.arithmetic import ProbabilityContext, decode_arithmetic
+from util.byteStream import ByteStream
 
 logger = logging.getLogger(__name__)
+
 
 class PredictorType(enum.Enum):
     PredLag1 = 0
@@ -31,7 +32,8 @@ class I32CDP2:
     @classmethod
     def read_vec_i_32(cls, e_bytes: ByteStream, predictor_type: PredictorType = PredictorType.PredNULL) -> [int]:
         decoded_symbols = cls.decode_bytes(e_bytes)
-        unpacked_symbols = cls.unpack_residuals(decoded_symbols, predictor_type)
+        unpacked_symbols = cls.unpack_residuals(
+            decoded_symbols, predictor_type)
         return unpacked_symbols
 
     @classmethod
@@ -74,30 +76,37 @@ class I32CDP2:
             return index
 
     @classmethod
-    def decode_bytes(cls, e_bytes) -> list:
+    def decode_bytes(cls, e_bytes:ByteStream) -> list:
+        logger.debug(f"starting decode of {e_bytes.bytes[e_bytes.offset:e_bytes.offset+40].hex(' ')} ...")
         value_count = struct.unpack("<i", e_bytes.read(4))[0]
         if value_count <= 0:
             return []
 
         codec_type = struct.unpack("<B", e_bytes.read(1))[0]
         if codec_type != 0 and codec_type != 1 and codec_type != 3 and codec_type != 4:
-            raise RuntimeError(f"Codec Type {codec_type} not supported for {cls.__name__}")
+            raise RuntimeError(
+                f"Codec Type {codec_type} not supported for {cls.__name__}")
         elif codec_type == cls.CODECTYPE_CHOPPER:
+            logger.debug(f"{codec_type=}")
             chop_bits = struct.unpack("<B", e_bytes.read(1))[0]
             if chop_bits == 0:
                 return cls.decode_bytes(e_bytes)
             else:
-                value_bias, value_span_bits = struct.unpack("<iB", e_bytes.read(5))
+                value_bias, value_span_bits = struct.unpack(
+                    "<iB", e_bytes.read(5))
                 chopped_msb_data = cls.decode_bytes(e_bytes)
                 chopped_lsb_data = cls.decode_bytes(e_bytes)
 
                 decoded_symbols = []
                 for msb, lsb in zip(chopped_msb_data, chopped_lsb_data):
-                    decoded_symbols.append((lsb | msb << (value_span_bits - chop_bits)) + value_bias)
+                    decoded_symbols.append(
+                        (lsb | msb << (value_span_bits - chop_bits)) + value_bias)
                 return decoded_symbols
         elif codec_type == cls.CODECTYPE_NULL:
+            logger.debug(f"{codec_type=}")
             length = struct.unpack("<i", e_bytes.read(4))[0]
-            decoded_symbols = struct.unpack("<" + ("i" * (length // 4)), e_bytes.read(length))
+            decoded_symbols = struct.unpack(
+                "<" + ("i" * (length // 4)), e_bytes.read(length))
             return list(decoded_symbols)
         code_text_length = struct.unpack("<i", e_bytes.read(4))[0]
         words_to_read = int(math.ceil(code_text_length / 32.0))
@@ -114,7 +123,9 @@ class I32CDP2:
         int_32_probability_contexts = ProbabilityContext(0, 0, [])
         out_of_band_values = []
         if codec_type == cls.CODECTYPE_ARITHMETIC:
-            int_32_probability_contexts = ProbabilityContext.from_bytes(e_bytes)
+            logger.debug(f"{codec_type=}")
+            int_32_probability_contexts = ProbabilityContext.from_bytes(
+                e_bytes)
             out_of_band_values = cls.decode_bytes(e_bytes)
             if code_text_length == 0 and len(out_of_band_values) == value_count:
                 return out_of_band_values
@@ -124,13 +135,17 @@ class I32CDP2:
         logger.debug(f"{codec_driver.bit_buffer.position=}")
 
         if codec_type == cls.CODECTYPE_BITLENGTH:
+            logger.debug(f"{codec_type=}")
+            logger.debug("calling decode_bitlength2 from i32csp2")
             decoded_symbols = decode_bitlength2(codec_driver)
         elif codec_type == cls.CODECTYPE_ARITHMETIC:
+            logger.debug(f"{codec_type=}")
             decoded_symbols = decode_arithmetic(codec_driver)
         else:
             decoded_symbols = []
 
         if len(decoded_symbols) != value_count:
-            logger.error(f"Codec produced wrong number of symbols: {len(decoded_symbols)} {value_count}")
-            #raise RuntimeError(f"Codec produced wrong number of symbols: {len(decoded_symbols)} {value_count}")
+            logger.error(
+                f"Codec produced wrong number of symbols: {len(decoded_symbols)} {value_count}")
+            # raise RuntimeError(f"Codec produced wrong number of symbols: {len(decoded_symbols)} {value_count}")
         return decoded_symbols

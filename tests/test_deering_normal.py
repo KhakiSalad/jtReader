@@ -1,6 +1,6 @@
 import pytest
 
-from jt_reader.codec.deeringNormal import DeeringNormalLookupTable
+from codec.deeringNormal import DeeringNormalLookupTable
 
 
 @pytest.fixture

@@ -57,3 +57,5 @@ htmlcov/
 # Ignore packages installed in editable mode
 src/*.egg-info/
 __pycache__
+
+assets/

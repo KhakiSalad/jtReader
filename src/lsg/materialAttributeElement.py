@@ -1,15 +1,16 @@
 import struct
 from dataclasses import dataclass
 
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.baseAttributeData import BaseAttributeData
-from jt_reader.lsg.types import GUID, JtVersion
-from jt_reader.lsg.lsgNode import LSGNode
+from lsg.elementHeader import ElementHeader
+from lsg.baseAttributeData import BaseAttributeData
+from lsg.types import GUID, JtVersion
+from lsg.lsgNode import LSGNode
 
 
 @dataclass
 class MaterialAttributeElement(LSGNode):
-    TYPE_ID = GUID((0x10dd1030, 0x2ac8, 0x11d1, 0x9b, 0x6b, 0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
+    TYPE_ID = GUID((0x10dd1030, 0x2ac8, 0x11d1, 0x9b, 0x6b,
+                   0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
     BASE_TYPE = 3
 
     element_header: ElementHeader
@@ -33,10 +34,11 @@ class MaterialAttributeElement(LSGNode):
 
     @classmethod
     def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
-        base_attribute_data = BaseAttributeData.from_bytes(e_bytes, version=version)
+        base_attribute_data = BaseAttributeData.from_bytes(
+            e_bytes, version=version)
         if version == JtVersion.V9d5:
             version_number, data_flags = struct.unpack("<hH", e_bytes.read(4))
-        else: 
+        else:
             version_number, data_flags = struct.unpack("<BH", e_bytes.read(3))
         ambient_color = struct.unpack("ffff", e_bytes.read(16))
         diffuse_color_and_alpha = struct.unpack("ffff", e_bytes.read(16))

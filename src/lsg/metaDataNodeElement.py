@@ -1,14 +1,15 @@
 from dataclasses import dataclass
 
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.metaDataNodeData import MetaDataNodeData
-from jt_reader.lsg.types import GUID, JtVersion
-from jt_reader.lsg.lsgNode import LSGNode
+from lsg.elementHeader import ElementHeader
+from lsg.metaDataNodeData import MetaDataNodeData
+from lsg.types import GUID, JtVersion
+from lsg.lsgNode import LSGNode
 
 
 @dataclass
 class MetaDataNodeElement(LSGNode):
-    TYPE_ID = GUID((0xce357245, 0x38fb, 0x11d1, 0xa5, 0x6, 0x0, 0x60, 0x97, 0xbd, 0xc6, 0xe1))
+    TYPE_ID = GUID((0xce357245, 0x38fb, 0x11d1, 0xa5, 0x6,
+                   0x0, 0x60, 0x97, 0xbd, 0xc6, 0xe1))
     BASE_TYPE = 1
 
     element_header: ElementHeader

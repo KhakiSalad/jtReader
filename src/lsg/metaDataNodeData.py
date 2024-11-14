@@ -1,8 +1,8 @@
 import struct
 from dataclasses import dataclass
 
-from jt_reader.lsg.groupNodeData import GroupNodeData
-from jt_reader.lsg.types import JtVersion
+from lsg.groupNodeData import GroupNodeData
+from lsg.types import JtVersion
 
 
 @dataclass

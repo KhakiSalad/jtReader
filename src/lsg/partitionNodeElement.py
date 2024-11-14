@@ -1,10 +1,10 @@
 import struct
 from dataclasses import dataclass
 
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.groupNodeData import GroupNodeData
-from jt_reader.lsg.types import GUID, BBoxF32, JtVersion
-from jt_reader.lsg.lsgNode import LSGNode
+from lsg.elementHeader import ElementHeader
+from lsg.groupNodeData import GroupNodeData
+from lsg.types import GUID, BBoxF32, JtVersion
+from lsg.lsgNode import LSGNode
 
 import logging
 logger = logging.getLogger(__name__)
@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PartitionNodeElement(LSGNode):
-    TYPE_ID = GUID((0x10dd103e, 0x2ac8, 0x11d1, 0x9b, 0x6b, 0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
+    TYPE_ID = GUID((0x10dd103e, 0x2ac8, 0x11d1, 0x9b, 0x6b,
+                   0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
     BASE_TYPE = 1
     element_header: ElementHeader
     group_node_data: GroupNodeData
@@ -45,7 +46,8 @@ class PartitionNodeElement(LSGNode):
         filename = e_bytes.read(2 * s_len).decode('utf-16')
         logger.info(f"started loading file {filename}")
         # **** reservedField | Transformed BBox ****
-        transformed_bbox = BBoxF32.from_coords(*struct.unpack("ffffff", e_bytes.read(24)))
+        transformed_bbox = BBoxF32.from_coords(
+            *struct.unpack("ffffff", e_bytes.read(24)))
         # **** Area ****
         area = struct.unpack("f", e_bytes.read(4))[0]
         # **** Vertex, Node, Poly Count Range ****
@@ -54,7 +56,8 @@ class PartitionNodeElement(LSGNode):
         p_count_min, p_count_max = struct.unpack("ii", e_bytes.read(8))
         # **** pass | Untransformed BBox ****
         if partition_flags & 0x00000001 != 0:
-            untransformed_bbox = BBoxF32.from_coords(*struct.unpack("ffffff", e_bytes.read(24)))
+            untransformed_bbox = BBoxF32.from_coords(
+                *struct.unpack("ffffff", e_bytes.read(24)))
         else:
             untransformed_bbox = None
         return PartitionNodeElement(element_header=header,

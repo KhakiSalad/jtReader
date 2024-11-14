@@ -1,8 +1,8 @@
 import struct
 from dataclasses import dataclass
 
-from jt_reader.lsg.baseNodeData import BaseNodeData
-from jt_reader.lsg.types import BBoxF32, JtVersion
+from lsg.baseNodeData import BaseNodeData
+from lsg.types import BBoxF32, JtVersion
 
 
 @dataclass
@@ -29,8 +29,10 @@ class BaseShapeData:
             version_number = struct.unpack("h", e_bytes.read(2))[0]
         else:
             version_number = struct.unpack("B", e_bytes.read(1))[0]
-        reserverd_field1 = BBoxF32.from_coords(*struct.unpack("ffffff", e_bytes.read(24)))
-        untransformed_bbox = BBoxF32.from_coords(*struct.unpack("ffffff", e_bytes.read(24)))
+        reserverd_field1 = BBoxF32.from_coords(
+            *struct.unpack("ffffff", e_bytes.read(24)))
+        untransformed_bbox = BBoxF32.from_coords(
+            *struct.unpack("ffffff", e_bytes.read(24)))
         area = struct.unpack("f", e_bytes.read(4))[0]
         v_count_min, v_count_max = struct.unpack("ii", e_bytes.read(8))
         n_count_min, n_count_max = struct.unpack("ii", e_bytes.read(8))

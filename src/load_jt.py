@@ -18,6 +18,17 @@ from metadata.metadata import Metadata, read_metadata_segment
 from shape.shape import Shape, read_shape_segment, ShapeLod0, ShapeLod1
 from util.byteStream import ByteStream
 
+import traceback
+import sys
+
+
+def debug_info(type, value, tb):
+    import pdb
+    traceback.print_exception(type, value, tb)
+    pdb.post_mortem(tb)
+
+
+
 PATH = ""
 PATH_9: Final = r'8W8_827_605____PCA_TM__010_____HALTER_HKL_________150819______________.jt'
 PATH_10: Final = r'83H_837_461____PCA_TM__400_____HEBEGESTELL_VT_____HI_LEX_20220722_____.jt'
@@ -98,9 +109,10 @@ def read_table_of_contents(path: str):
         # read header
         jt_version = jt.read(80)
         jt_version = jt_version[8:12]
-        if jt_version == b'9.5 ':
+        if jt_version == b'9.5 ' or jt_version == b'9.4 ':
             VERSION = JtVersion.V9d5
-        elif jt_version == b'10.5':
+        #TODO: Check differences between 10.5 and 10.0
+        elif jt_version == b'10.5' or jt_version == b"10.0":
             VERSION = JtVersion.V10d5
         else:
             raise NotImplementedError(f"version {jt_version} not supported")
@@ -212,18 +224,22 @@ def flatten_lsg_nodes(lsg_nodes: list):
 
 def main():
     parser = argparse.ArgumentParser(description="Load a jt file")
-    parser.add_argument('version', metavar='v', type=int,
-                        nargs='?', help='version to load', default=10)
+    # parser.add_argument('version', metavar='v', type=int,
+                        # nargs='?', help='version to load', default=10)
+    parser.add_argument("path")
     parser.add_argument('--debug', action="store_true")
     args = parser.parse_args()
     logging_config.configure_logging(args.debug)
+    if args.debug:
+        sys.excepthook = debug_info
     logger.info("Started")
     logger.debug("showing debug information")
 
-    if args.version == 9:
-        PATH = PATH_9
-    else:
-        PATH = PATH_10
+    # if args.version == 9:
+    #     PATH = PATH_9
+    # else:
+    #     PATH = PATH_10
+    PATH = args.path
 
     jt_toc = read_table_of_contents(PATH)
 

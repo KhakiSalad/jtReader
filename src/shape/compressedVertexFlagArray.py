@@ -1,7 +1,7 @@
 import struct
 from dataclasses import dataclass
 
-from jt_reader.codec.i32Cdp2 import I32CDP2
+from codec.i32Cdp2 import I32CDP2
 
 
 @dataclass

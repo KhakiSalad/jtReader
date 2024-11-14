@@ -1,8 +1,8 @@
 import struct
 from dataclasses import dataclass
 
-from jt_reader.lsg.baseShapeData import BaseShapeData
-from jt_reader.lsg.types import QuantizationParameters, JtVersion
+from lsg.baseShapeData import BaseShapeData
+from lsg.types import QuantizationParameters, JtVersion
 import sys
 
 
@@ -19,9 +19,11 @@ class VertexShapeData:
         # print("VertexShapeData ---------------------- " + str(version))
         base_shape_data = BaseShapeData.from_bytes(e_bytes, version=version)
         if version == JtVersion.V9d5:
-            version_number, vertex_binding = struct.unpack("<hQ", e_bytes.read(10))
+            version_number, vertex_binding = struct.unpack(
+                "<hQ", e_bytes.read(10))
         else:
-            version_number, vertex_binding = struct.unpack("<BQ", e_bytes.read(9))
+            version_number, vertex_binding = struct.unpack(
+                "<BQ", e_bytes.read(9))
 
         quantization_parameters = QuantizationParameters.from_bytes(e_bytes)
         if version_number != 1:

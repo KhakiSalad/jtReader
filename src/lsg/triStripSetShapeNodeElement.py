@@ -1,14 +1,15 @@
 from dataclasses import dataclass
 
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.types import GUID, JtVersion
-from jt_reader.lsg.vertexShapeData import VertexShapeData
-from jt_reader.lsg.lsgNode import LSGNode
+from lsg.elementHeader import ElementHeader
+from lsg.types import GUID, JtVersion
+from lsg.vertexShapeData import VertexShapeData
+from lsg.lsgNode import LSGNode
 
 
 @dataclass
 class TriStripSetShapeNodeElement(LSGNode):
-    TYPE_ID = GUID((0x10dd1077, 0x2ac8, 0x11d1, 0x9b, 0x6b, 0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
+    TYPE_ID = GUID((0x10dd1077, 0x2ac8, 0x11d1, 0x9b, 0x6b,
+                   0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
     BASE_TYPE = 2
 
     element_header: ElementHeader

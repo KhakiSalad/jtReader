@@ -1,15 +1,16 @@
 import struct
 from dataclasses import dataclass
 
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.lodNodeData import LODNodeData
-from jt_reader.lsg.types import GUID, VecF32, CoordF32, JtVersion
-from jt_reader.lsg.lsgNode import LSGNode
+from lsg.elementHeader import ElementHeader
+from lsg.lodNodeData import LODNodeData
+from lsg.types import GUID, VecF32, CoordF32, JtVersion
+from lsg.lsgNode import LSGNode
 
 
 @dataclass
 class RangeLODNodeElement(LSGNode):
-    TYPE_ID = GUID((0x10dd104c, 0x2ac8, 0x11d1, 0x9b, 0x6b, 0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
+    TYPE_ID = GUID((0x10dd104c, 0x2ac8, 0x11d1, 0x9b, 0x6b,
+                   0x00, 0x80, 0xc7, 0xbb, 0x59, 0x97))
     BASE_TYPE = 1
 
     element_header: ElementHeader

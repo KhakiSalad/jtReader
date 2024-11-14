@@ -1,5 +1,5 @@
-from jt_reader.util.bitBuffer import BitBuffer
-from jt_reader.util import ByteStream
+from util.bitBuffer import BitBuffer
+from util import ByteStream
 import pytest
 from operator import itemgetter
 

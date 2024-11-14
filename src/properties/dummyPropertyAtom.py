@@ -1,15 +1,15 @@
 import struct
 from dataclasses import dataclass
 
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.types import GUID, JtVersion
-from jt_reader.properties.basePropertyAtomData import BasePropertyAtomData
-from jt_reader.properties.lsgProperty import LSGProperty
+from lsg.elementHeader import ElementHeader
+from lsg.types import GUID, JtVersion
+from properties.basePropertyAtomData import BasePropertyAtomData
+from properties.lsgProperty import LSGProperty
 
 
 @dataclass
 class DummyPropertyAtom(LSGProperty):
-    TYPE_ID = GUID((0,0,0,0,0,0,0,0,0,0,0,))
+    TYPE_ID = GUID((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,))
 
     element_header: ElementHeader
     base_property_atom_data: BasePropertyAtomData
