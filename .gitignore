@@ -1,0 +1,59 @@
+# Python bytecode files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment directory
+venv/
+
+# Distribution and build directories
+dist/
+build/
+*.egg-info/
+
+# IDE/editor specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.bak
+*.orig
+*.~ 
+
+# Testing and coverage files
+*.cover
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.coveragerc
+*.pytest_cache/
+htmlcov/
+
+# Pytest and test-related files
+.pytest_cache/
+.tox/
+.env
+.mypy_cache/
+.pyre/
+.coverage.*
+
+# Ignore compiled Cython files
+*.so
+
+# Ignore packages installed in editable mode
+src/*.egg-info/
+__pycache__
