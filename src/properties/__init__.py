@@ -1,3 +1,3 @@
-from jt_reader.properties.floatingPointPropertyAtom import FloatingPointPropertyAtom
-from jt_reader.properties.lateLoadedPropertyAtom import LateLoadedPropertyAtom
-from jt_reader.properties.stringPropertyAtom import StringPropertyAtom
+from .floatingPointPropertyAtom import FloatingPointPropertyAtom
+from .lateLoadedPropertyAtom import LateLoadedPropertyAtom
+from .stringPropertyAtom import StringPropertyAtom

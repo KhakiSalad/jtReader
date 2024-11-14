@@ -1,20 +1,22 @@
 from dash import Dash, html, dash_table
 
-from jt_reader import load_jt
-from jt_reader.lsg.lsgNode import LSGNode
-from jt_reader.properties import LateLoadedPropertyAtom
-from jt_reader.load_jt import toc_entries_to_df
-from jt_reader.logging_config import configure_logging
+from . import load_jt
+from .lsg.lsgNode import LSGNode
+from .properties import LateLoadedPropertyAtom
+from .load_jt import toc_entries_to_df
+from core.logging_config import configure_logging
 import argparse
 import logging
-logger=logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 global PATH
 
 app = Dash(__name__)
 
+
 def get_tree(node: LSGNode):
     global PATH
+
     def flatten_node(n):
         return list(load_jt.flatten_lsg_nodes([n]))[0]
 
@@ -52,10 +54,12 @@ def get_tree(node: LSGNode):
     else:
         # load late loaded properties
         props = node.properties.copy()
-        late_loaded = filter(lambda k: isinstance(node.properties[k], LateLoadedPropertyAtom), node.properties.keys())
+        late_loaded = filter(lambda k: isinstance(
+            node.properties[k], LateLoadedPropertyAtom), node.properties.keys())
         for k in late_loaded:
             ll_segment_id = node.properties[k].segment_id
-            ll_entry = list(filter(lambda entry: entry.guid == ll_segment_id, toc))
+            ll_entry = list(
+                filter(lambda entry: entry.guid == ll_segment_id, toc))
             if len(ll_entry) > 0:
                 ll_entry = ll_entry[0]
                 ll_data = load_jt.read_segment(PATH, ll_entry.offset)
@@ -71,7 +75,8 @@ def get_tree(node: LSGNode):
                 style={'font-size': '11pt'}
             ),
             dash_table.DataTable(
-                data=[{"key": str(k), "val": str(v)} for (k, v) in node.properties.items()],
+                data=[{"key": str(k), "val": str(v)}
+                      for (k, v) in node.properties.items()],
                 style_cell={'textAlign': 'left'}
             ),
         ])
@@ -99,7 +104,8 @@ def get_tree(node: LSGNode):
                     node_props,
                     html.Div(
                         [get_tree(c) for c in node.child_nodes],
-                        style={'padding-left': f'4em', 'border-left': '2px dashed'}
+                        style={'padding-left': f'4em',
+                               'border-left': '2px dashed'}
                     ),
                 ],
             )
@@ -109,11 +115,10 @@ def get_tree(node: LSGNode):
     return tree
 
 
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Load a jt file")
-    parser.add_argument('version', metavar='v', type=int, nargs='?', help='version to load', default=10)
+    parser.add_argument('version', metavar='v', type=int,
+                        nargs='?', help='version to load', default=10)
     parser.add_argument('--debug', action="store_true")
     args = parser.parse_args()
     configure_logging(args.debug)
@@ -131,16 +136,18 @@ if __name__ == '__main__':
     lsg = load_jt.read_segment(PATH, toc_df.iloc[0].Offset)
 
     app.layout = html.Div([
-    html.H1(children='.jt Reader', style={'textAlign': 'center'}),
-    html.H3(children='Table of Contents', style={'textAlign': 'center'}),
-    dash_table.DataTable(
-        id="datatable-toc",
-        data=toc_df.to_dict('records'),
-        style_cell={'textAlign': 'left'}
-    ),
-    html.H3(children='Logical Scene Graph - Nodes', style={'textAlign': 'center'}),
-    get_tree(lsg.rootNode),
-    html.H3(children='Logical Scene Graph - Properties', style={'textAlign': 'center'}),
+        html.H1(children='.jt Reader', style={'textAlign': 'center'}),
+        html.H3(children='Table of Contents', style={'textAlign': 'center'}),
+        dash_table.DataTable(
+            id="datatable-toc",
+            data=toc_df.to_dict('records'),
+            style_cell={'textAlign': 'left'}
+        ),
+        html.H3(children='Logical Scene Graph - Nodes',
+                style={'textAlign': 'center'}),
+        get_tree(lsg.rootNode),
+        html.H3(children='Logical Scene Graph - Properties',
+                style={'textAlign': 'center'}),
 
     ], style={'font-family': 'monospace'})
     app.run(debug=args.debug)

@@ -2,31 +2,28 @@
 import dataclasses
 import argparse
 import logging
-import sys
 from typing import Final
 import struct
 from dataclasses import dataclass, field
 import zlib
 import lzma
 import matplotlib.pyplot as plt
-import matplotlib
-#matplotlib.use('tkagg')
-from mpl_toolkits.mplot3d import proj3d
+# matplotlib.use('tkagg')
 
 import pandas as pd
-
-from jt_reader import logging_config
-from jt_reader.lsg.lsg import LSG, read_lsg_segment
-from jt_reader.lsg.types import GUID, JtVersion
-from jt_reader.metadata.metadata import Metadata, read_metadata_segment
-from jt_reader.shape.shape import Shape, read_shape_segment, ShapeLod0, ShapeLod1
-from jt_reader.util.byteStream import ByteStream
+from core import logging_config
+from lsg.lsg import LSG, read_lsg_segment
+from lsg.types import GUID, JtVersion
+from metadata.metadata import Metadata, read_metadata_segment
+from shape.shape import Shape, read_shape_segment, ShapeLod0, ShapeLod1
+from util.byteStream import ByteStream
 
 PATH = ""
 PATH_9: Final = r'8W8_827_605____PCA_TM__010_____HALTER_HKL_________150819______________.jt'
 PATH_10: Final = r'83H_837_461____PCA_TM__400_____HEBEGESTELL_VT_____HI_LEX_20220722_____.jt'
 VERSION = JtVersion.unsupported
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class DataSegmentType:
@@ -100,9 +97,9 @@ def read_table_of_contents(path: str):
         global VERSION
         # read header
         jt_version = jt.read(80)
-        jt_version =jt_version[8:12]
+        jt_version = jt_version[8:12]
         if jt_version == b'9.5 ':
-            VERSION = JtVersion.V9d5 
+            VERSION = JtVersion.V9d5
         elif jt_version == b'10.5':
             VERSION = JtVersion.V10d5
         else:
@@ -121,13 +118,16 @@ def read_table_of_contents(path: str):
             seg_id = GUID.from_bytes(jt)
             # TODO: actual version parsing
             if VERSION == JtVersion.V9d5:
-                seg_offset, seg_len, seg_attr = struct.unpack("iiI", jt.read(12))
+                seg_offset, seg_len, seg_attr = struct.unpack(
+                    "iiI", jt.read(12))
             elif VERSION == JtVersion.V10d5:
-                seg_offset, seg_len, seg_attr = struct.unpack("QII", jt.read(16))
+                seg_offset, seg_len, seg_attr = struct.unpack(
+                    "QII", jt.read(16))
 
             seg_type = seg_attr & 0xFF000000
             seg_type = seg_type >> 24
-            jt_toc_entry.append(TocEntry(seg_id, seg_offset, seg_len, seg_attr, DATA_SEGMENT_TYPES[seg_type - 1]))
+            jt_toc_entry.append(TocEntry(
+                seg_id, seg_offset, seg_len, seg_attr, DATA_SEGMENT_TYPES[seg_type - 1]))
     return jt_toc_entry
 
 
@@ -140,7 +140,8 @@ def read_segment(path, toc_entry_offset: int):
         if DATA_SEGMENT_TYPES[ds_type - 1].compression:
             # only first element in segment
             if VERSION == JtVersion.V9d5:
-                comp_flag, comp_len, comp_alg = struct.unpack("iiB", jt.read(9))
+                comp_flag, comp_len, comp_alg = struct.unpack(
+                    "iiB", jt.read(9))
                 # comp_alg is part of comp_len
                 comp_len -= 1
                 if comp_flag == 2 and comp_alg == 2:
@@ -148,7 +149,8 @@ def read_segment(path, toc_entry_offset: int):
                 else:
                     ds_bytes = ByteStream(jt.read(comp_len))
             elif VERSION == JtVersion.V10d5:
-                comp_flag, comp_len, comp_alg = struct.unpack("IiB", jt.read(9))
+                comp_flag, comp_len, comp_alg = struct.unpack(
+                    "IiB", jt.read(9))
                 comp_len -= 1
                 if comp_flag == 3 and comp_alg == 3:
                     ds_bytes = ByteStream(lzma.decompress(jt.read(comp_len)))
@@ -207,9 +209,11 @@ def flatten_lsg_nodes(lsg_nodes: list):
             "val": str(data)
         }
 
+
 def main():
     parser = argparse.ArgumentParser(description="Load a jt file")
-    parser.add_argument('version', metavar='v', type=int, nargs='?', help='version to load', default=10)
+    parser.add_argument('version', metavar='v', type=int,
+                        nargs='?', help='version to load', default=10)
     parser.add_argument('--debug', action="store_true")
     args = parser.parse_args()
     logging_config.configure_logging(args.debug)
@@ -239,15 +243,19 @@ def main():
     print(lsg.ascii_lsg_tree())
 
     guid_shape_in_lsg = (
-        GUID((0x0C06BE92, 0x467A, 0x11E5, 0x80, 0, 0x91, 0x9d, 0x66, 0x7e, 0x24, 0x30)),
-        GUID((0x0C06BE99, 0x467A, 0x11E5, 0x80, 0, 0x91, 0x9d, 0x66, 0x7e, 0x24, 0x30)),
-        GUID((0x0C06BE9e, 0x467A, 0x11E5, 0x80, 0, 0x91, 0x9d, 0x66, 0x7e, 0x24, 0x30))
+        GUID((0x0C06BE92, 0x467A, 0x11E5, 0x80, 0,
+             0x91, 0x9d, 0x66, 0x7e, 0x24, 0x30)),
+        GUID((0x0C06BE99, 0x467A, 0x11E5, 0x80, 0,
+             0x91, 0x9d, 0x66, 0x7e, 0x24, 0x30)),
+        GUID((0x0C06BE9e, 0x467A, 0x11E5, 0x80, 0,
+             0x91, 0x9d, 0x66, 0x7e, 0x24, 0x30))
     )
     shapes = []
     print(shape_entries)
     # shape_entries = filter(lambda se: se.guid in guid_shape_in_lsg, shape_entries)
     for entry in shape_entries:
-        logger.info(f"starting to read shape segment {entry.guid} at {entry.offset}")
+        logger.info(
+            f"starting to read shape segment {entry.guid} at {entry.offset}")
         shapes.append(read_segment(PATH, entry.offset))
         logger.info(f"finished reading shape segment at {entry.offset}")
     print(shapes)
