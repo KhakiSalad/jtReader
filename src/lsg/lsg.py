@@ -16,8 +16,8 @@ from .instanceNodeElement import InstanceNodeElement
 from .elementHeader import ElementHeader
 from .lsgNode import LSGNode
 from .dummyNodeElement import DummyNodeElement
-from jt_reader.properties import LateLoadedPropertyAtom, FloatingPointPropertyAtom, StringPropertyAtom
-from jt_reader.properties.dummyPropertyAtom import DummyPropertyAtom
+from properties import LateLoadedPropertyAtom, FloatingPointPropertyAtom, StringPropertyAtom
+from properties.dummyPropertyAtom import DummyPropertyAtom
 from .types import JtVersion
 
 logger = logging.getLogger(__name__)

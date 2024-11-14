@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from jt_reader.util.bitBuffer import BitBuffer
+from util.bitBuffer import BitBuffer
 
 
 @dataclass

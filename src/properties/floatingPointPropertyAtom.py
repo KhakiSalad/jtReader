@@ -1,10 +1,10 @@
 import struct
 from dataclasses import dataclass
 
-from jt_reader.properties.basePropertyAtomData import BasePropertyAtomData
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.properties.lsgProperty import LSGProperty
-from jt_reader.lsg.types import GUID, JtVersion
+from properties.basePropertyAtomData import BasePropertyAtomData
+from lsg.elementHeader import ElementHeader
+from properties.lsgProperty import LSGProperty
+from lsg.types import GUID, JtVersion
 
 
 @dataclass

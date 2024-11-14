@@ -1,11 +1,12 @@
 import struct
 import logging
 from dataclasses import dataclass
-from jt_reader.lsg.baseNodeData import BaseNodeData
-from jt_reader.lsg.types import JtVersion
+from lsg.baseNodeData import BaseNodeData
+from lsg.types import JtVersion
 
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class GroupNodeData:
@@ -22,7 +23,8 @@ class GroupNodeData:
             version_number, child_count = struct.unpack("<hi", e_bytes.read(6))
         else:
             version_number, child_count = struct.unpack("<Bi", e_bytes.read(5))
-        child_node_object_id = struct.unpack("i" * child_count, e_bytes.read(4 * child_count))
+        child_node_object_id = struct.unpack(
+            "i" * child_count, e_bytes.read(4 * child_count))
         if version == JtVersion.V10d5:
             # warum auch immer, aber scheint zu funktionieren
             e_bytes.read(1)

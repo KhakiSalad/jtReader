@@ -2,13 +2,14 @@ import logging
 import struct
 from dataclasses import dataclass
 
-from jt_reader.codec.i32Cdp2 import I32CDP2, PredictorType
-from jt_reader.shape.topologicallyCompressedVertexRecords import TopologicallyCompressedVertexRecords
-from jt_reader.util import byteStream as bs
-from jt_reader.util.jt_hash import jt_hash32
-from jt_reader.lsg.types import JtVersion
+from codec.i32Cdp2 import I32CDP2, PredictorType
+from shape.topologicallyCompressedVertexRecords import TopologicallyCompressedVertexRecords
+from util import byteStream as bs
+from util.jt_hash import jt_hash32
+from lsg.types import JtVersion
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class TopologicallyCompressedRepData:
@@ -53,7 +54,8 @@ class TopologicallyCompressedRepData:
     @classmethod
     def from_bytes(cls, e_bytes, version=JtVersion.V9d5):
         logger.debug(f'creating from bytes')
-        logger.debug((e_bytes.bytes[e_bytes.offset:e_bytes.offset+30]).hex(" "))
+        logger.debug(
+            (e_bytes.bytes[e_bytes.offset:e_bytes.offset+30]).hex(" "))
         face_degrees = []
         for i in range(8):
             face_degrees.append(I32CDP2.read_vec_i_32(e_bytes))
@@ -68,12 +70,14 @@ class TopologicallyCompressedRepData:
         face_attribute_masks8_30 = I32CDP2.read_vec_i_32(e_bytes)
         face_attribute_masks8_4 = I32CDP2.read_vec_i_32(e_bytes)
         high_degree_face_attribute_mask = bs.read_vec_i_32(e_bytes)
-        split_face_syms = I32CDP2.read_vec_i_32(e_bytes, PredictorType.PredLag1)
+        split_face_syms = I32CDP2.read_vec_i_32(
+            e_bytes, PredictorType.PredLag1)
         split_face_positions = I32CDP2.read_vec_i_32(e_bytes)
 
         read_hash = struct.unpack("<I", e_bytes.read(4))[0]
 
-        topologically_compressed_vertex_records = TopologicallyCompressedVertexRecords.from_bytes(e_bytes)
+        topologically_compressed_vertex_records = TopologicallyCompressedVertexRecords.from_bytes(
+            e_bytes)
         return TopologicallyCompressedRepData(face_degrees,
                                               vertex_valences,
                                               vertex_groups,

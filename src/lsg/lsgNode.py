@@ -1,6 +1,6 @@
 import abc
 
-from jt_reader.lsg.elementHeader import ElementHeader
+from lsg.elementHeader import ElementHeader
 
 
 class LSGNode(abc.ABC):

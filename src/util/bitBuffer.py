@@ -2,10 +2,11 @@ import logging
 from dataclasses import dataclass, field
 from typing import Literal
 
-from jt_reader.util.byteStream import ByteStream
+from util.byteStream import ByteStream
 
 logger = logging.getLogger(__name__)
 logger.setLevel("INFO")
+
 
 @dataclass
 class BitBuffer:
@@ -27,7 +28,8 @@ class BitBuffer:
             mask = 0xFFFFFFFFFFFFFFFF >> (64 - num_bits)
         result = mask & right_shifted
         self.position += num_bits
-        logger.debug(f"finished read int {num_bits=} {num_bytes=} {num_buff=} {shift_bits=} {right_shifted=} {result=}")
+        logger.debug(
+            f"finished read int {num_bits=} {num_bytes=} {num_buff=} {shift_bits=} {right_shifted=} {result=}")
         return result
 
     def get_number_buf_as_int(self, num_bytes, first_byte_pos):
@@ -48,4 +50,3 @@ class BitBuffer:
         sign_bit = 1 << (num_bits-1)
         result = result | (-(result & sign_bit))
         return result
-

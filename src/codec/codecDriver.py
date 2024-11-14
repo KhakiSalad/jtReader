@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 
-from jt_reader.util.bitBuffer import BitBuffer
-from jt_reader.codec.arithmetic.probabilityContext import ProbabilityContext
-from jt_reader.util.byteStream import ByteStream
+from util.bitBuffer import BitBuffer
+from codec.arithmetic.probabilityContext import ProbabilityContext
+from util.byteStream import ByteStream
 
 
 @dataclass

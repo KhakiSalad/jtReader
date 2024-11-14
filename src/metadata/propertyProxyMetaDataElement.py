@@ -2,14 +2,15 @@ import datetime
 import struct
 from dataclasses import dataclass
 
-from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.types import GUID, JtVersion
-from jt_reader.metadata.metadataElement import MetadataElement
+from lsg.elementHeader import ElementHeader
+from lsg.types import GUID, JtVersion
+from metadata.metadataElement import MetadataElement
 
 
 @dataclass
 class PropertyProxyMetaDataElement(MetadataElement):
-    TYPE_ID = GUID((0xce357247, 0x38fb, 0x11d1, 0xa5, 0x6, 0x0, 0x60, 0x97, 0xbd, 0xc6, 0xe1))
+    TYPE_ID = GUID((0xce357247, 0x38fb, 0x11d1, 0xa5, 0x6,
+                   0x0, 0x60, 0x97, 0xbd, 0xc6, 0xe1))
     element_header: ElementHeader
     version_number: int
     _properties: dict[str, object]
@@ -24,7 +25,7 @@ class PropertyProxyMetaDataElement(MetadataElement):
         return self._properties
 
     @classmethod
-    def from_bytes(cls, e_bytes, header=None,version=JtVersion.V9d5):
+    def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
         if version == JtVersion.V9d5:
             version_number = struct.unpack("<h", e_bytes.read(2))[0]
         else:
@@ -47,7 +48,8 @@ class PropertyProxyMetaDataElement(MetadataElement):
                 property_val = struct.unpack("f", e_bytes.read(4))
             elif value_type == 4:
                 # date year, month, day, hour, minute, second
-                property_val = datetime.datetime(*struct.unpack("<hhhhhh", e_bytes.read(12)))
+                property_val = datetime.datetime(
+                    *struct.unpack("<hhhhhh", e_bytes.read(12)))
 
             properties[property_key] = property_val
             s_len = struct.unpack("i", e_bytes.read(4))[0]
