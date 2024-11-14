@@ -3,6 +3,7 @@ import struct
 from jt_reader.shape.topoMeshCompressedLODData import TopoMeshCompressedLODData
 from jt_reader.shape.topoMeshLODData import TopoMeshLODData
 from jt_reader.shape.topologicallyCompressedRepData import TopologicallyCompressedRepData
+from jt_reader.lsg.types import JtVersion
 
 
 class TopoMeshTopologicallyCompressedLODData:
@@ -17,10 +18,15 @@ class TopoMeshTopologicallyCompressedLODData:
     topo_mesh_compressed_rep_data: TopologicallyCompressedRepData
 
     @classmethod
-    def from_bytes(cls, e_bytes):
-        topo_mesh_lod_data = TopoMeshLODData.from_bytes(e_bytes)
-        version_number = struct.unpack("<h", e_bytes.read(2))[0]
+    def from_bytes(cls, e_bytes, version=JtVersion.V9d5):
+        topo_mesh_lod_data = TopoMeshLODData.from_bytes(e_bytes, version=version)
+        if version ==JtVersion.V9d5:
+            version_number = struct.unpack("<h", e_bytes.read(2))[0]
+        else:
+            version_number = struct.unpack("<B", e_bytes.read(1))[0]
 
-        topo_mesh_compressed_rep_data = TopologicallyCompressedRepData.from_bytes(e_bytes)
+        if version_number != 1:
+            RuntimeError(f"version {version_number} not supported in {__name__}")
+        topo_mesh_compressed_rep_data = TopologicallyCompressedRepData.from_bytes(e_bytes, version=version)
 
         return TopoMeshCompressedLODData(topo_mesh_lod_data, version_number, topo_mesh_compressed_rep_data)

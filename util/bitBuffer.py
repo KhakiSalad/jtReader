@@ -27,7 +27,7 @@ class BitBuffer:
             mask = 0xFFFFFFFFFFFFFFFF >> (64 - num_bits)
         result = mask & right_shifted
         self.position += num_bits
-        logger.debug(f"{num_bits=} {num_bytes=} {num_buff=} {shift_bits=} {right_shifted=} {result=}")
+        logger.debug(f"finished read int {num_bits=} {num_bytes=} {num_buff=} {shift_bits=} {right_shifted=} {result=}")
         return result
 
     def get_number_buf_as_int(self, num_bytes, first_byte_pos):

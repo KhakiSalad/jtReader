@@ -3,6 +3,11 @@ from dataclasses import dataclass
 
 from jt_reader.shape.topoMeshCompressedLODData import TopoMeshCompressedLODData
 from jt_reader.shape.topoMeshTopologicallyCompressedLODData import TopoMeshTopologicallyCompressedLODData
+from jt_reader.lsg.types import JtVersion
+from jt_reader.lsg.elementHeader import ElementHeader
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -24,8 +29,17 @@ class VertexShapeLODData:
     topo_mesh_compressed_lod_data: TopoMeshCompressedLODData
 
     @classmethod
-    def from_bytes(cls, e_bytes, shape):
-        version_number = struct.unpack("<h", e_bytes.read(2))[0]
+    def from_bytes(cls, e_bytes, shape, version=JtVersion.unsupported):
+        logger.warning(f"{version=}")
+        if version==JtVersion.V9d5:
+            version_number = struct.unpack("<h", e_bytes.read(2))[0]
+        elif version==JtVersion.unsupported:
+            logger.critical("unsupported jt version")
+            raise RuntimeError("unsupported jt version")
+        else:
+            e_bytes.read(1) # base shape lod data
+            version_number = struct.unpack("B", e_bytes.read(1))[0]
+            logger.critical(f"{version_number=}")
         if version_number != 1:
             raise RuntimeError(f"Version {version_number} not supported for {cls.__name__}")
         vertex_binding = struct.unpack("<Q", e_bytes.read(8))[0]
@@ -118,10 +132,11 @@ class VertexShapeLODData:
             is present on the shape when the bit is set.
         """
 
+        if version==JtVersion.V10d5:
+            _ = ElementHeader.from_bytes(e_bytes) # apparently there is a header here
         if shape == "Tri-Strip":
-            e_bytes.read(2)
-            topo_mesh_compressed_lod_data = TopoMeshTopologicallyCompressedLODData.from_bytes(e_bytes)
+            topo_mesh_compressed_lod_data = TopoMeshTopologicallyCompressedLODData.from_bytes(e_bytes, version=version)
         else:
             e_bytes.read(2)
-            topo_mesh_compressed_lod_data = TopoMeshCompressedLODData.from_bytes(e_bytes)
+            topo_mesh_compressed_lod_data = TopoMeshCompressedLODData.from_bytes(e_bytes, version=version)
         return VertexShapeLODData(version_number, vertex_binding, topo_mesh_compressed_lod_data)

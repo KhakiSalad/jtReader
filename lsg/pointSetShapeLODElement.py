@@ -18,6 +18,6 @@ class PointSetShapeLODElement(LSGNode):
 
     @classmethod
     def from_bytes(cls, e_bytes, header=None, version=JtVersion.V9d5):
-        vertex_shape_lod_data = VertexShapeLODData.from_bytes(e_bytes)
+        vertex_shape_lod_data = VertexShapeLODData.from_bytes(e_bytes, version=version)
         version_number = struct.unpack("B", e_bytes.read(1))[0]
         return PointSetShapeLODElement(header, vertex_shape_lod_data, version_number)

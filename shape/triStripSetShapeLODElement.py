@@ -3,7 +3,7 @@ import struct
 from dataclasses import dataclass, field
 
 from jt_reader.lsg.elementHeader import ElementHeader
-from jt_reader.lsg.types import GUID
+from jt_reader.lsg.types import GUID, JtVersion
 from jt_reader.shape.shapeElement import ShapeElement
 from jt_reader.shape.vertexShapeLODData import VertexShapeLODData
 import logging
@@ -31,12 +31,19 @@ class TriStripSetShapeLodElement(ShapeElement):
     version_number: int
 
     @classmethod
-    def from_bytes(cls, e_bytes, header=None):
+    def from_bytes(cls, e_bytes, header=None, version=JtVersion.unsupported):
         logger.debug(f'creating {header} from bytes')
         os_begin = e_bytes.offset
 
-        vertex_shape_lod_data = VertexShapeLODData.from_bytes(e_bytes, shape="Tri-Strip")
-        version_number = struct.unpack("<h", e_bytes.read(2))[0]
+        vertex_shape_lod_data = VertexShapeLODData.from_bytes(e_bytes, shape="Tri-Strip", version=version)
+        if version==JtVersion.V9d5:
+            version_number = struct.unpack("<h", e_bytes.read(2))[0]
+        elif version==JtVersion.unsupported:
+            logger.critial("unsupported jt version")
+            raise RuntimeError("unsupported jt version")
+        else:
+            version_number = struct.unpack("<B", e_bytes.read(1))[0]
+
 
         os_end = e_bytes.offset
         # e_bytes.read(6)

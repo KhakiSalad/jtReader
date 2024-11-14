@@ -121,6 +121,7 @@ class I32CDP2:
 
         codec_driver = CodecDriver(code_text, code_text_length, value_count, int_32_probability_contexts,
                                    out_of_band_values)
+        logger.debug(f"{codec_driver.bit_buffer.position=}")
 
         if codec_type == cls.CODECTYPE_BITLENGTH:
             decoded_symbols = decode_bitlength2(codec_driver)

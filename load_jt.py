@@ -19,7 +19,7 @@ from jt_reader import logging_config
 from jt_reader.lsg.lsg import LSG, read_lsg_segment
 from jt_reader.lsg.types import GUID, JtVersion
 from jt_reader.metadata.metadata import Metadata, read_metadata_segment
-from jt_reader.shape.shape import Shape, read_shape_segment
+from jt_reader.shape.shape import Shape, read_shape_segment, ShapeLod0, ShapeLod1
 from jt_reader.util.byteStream import ByteStream
 
 PATH = ""
@@ -160,8 +160,8 @@ def read_segment(path, toc_entry_offset: int):
             return read_lsg_segment(ds_bytes, version=VERSION)
         elif ds_type == Metadata.SEGMENT_TYPE_ID:
             return read_metadata_segment(ds_bytes, VERSION)
-        elif ds_type == Shape.SEGMENT_TYPE_ID:
-            return read_shape_segment(ds_bytes)
+        elif ds_type == Shape.SEGMENT_TYPE_ID or ds_type == ShapeLod1.SEGMENT_TYPE_ID:
+            return read_shape_segment(ds_bytes, VERSION)
 
 
 def toc_entries_to_df(toc_entries: list[TocEntry]):

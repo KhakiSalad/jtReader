@@ -6,6 +6,7 @@ from jt_reader.codec.i32Cdp2 import I32CDP2, PredictorType
 from jt_reader.shape.topologicallyCompressedVertexRecords import TopologicallyCompressedVertexRecords
 from jt_reader.util import byteStream as bs
 from jt_reader.util.jt_hash import jt_hash32
+from jt_reader.lsg.types import JtVersion
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,9 @@ class TopologicallyCompressedRepData:
     topologically_compressed_vertex_records: TopologicallyCompressedVertexRecords
 
     @classmethod
-    def from_bytes(cls, e_bytes):
+    def from_bytes(cls, e_bytes, version=JtVersion.V9d5):
         logger.debug(f'creating from bytes')
+        logger.debug((e_bytes.bytes[e_bytes.offset:e_bytes.offset+30]).hex(" "))
         face_degrees = []
         for i in range(8):
             face_degrees.append(I32CDP2.read_vec_i_32(e_bytes))
