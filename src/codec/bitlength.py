@@ -2,7 +2,6 @@ import logging
 from codec.codecDriver import CodecDriver
 
 logger = logging.getLogger(__name__)
-# logger.setLevel("INFO")
 
 
 def get_bit_field_width(symbol: int):
@@ -17,24 +16,6 @@ def get_bit_field_width(symbol: int):
     return bit_field_width
 
 
-def nlz(x):
-    x = x | (x >> 1)
-    x = x | (x >> 2)
-    x = x | (x >> 4)
-    x = x | (x >> 8)
-    x = x | (x >> 16)
-    return popcnt(~x)
-
-
-def popcnt(x):
-    x = x - ((x >> 1) & 0x55555555)
-    x = (x & 0x33333333) + ((x >> 2) & 0x33333333)
-    x = (x + (x >> 4)) & 0x0f0f0f0f
-    x = x + (x >> 8)
-    x = x + (x >> 16)
-    return x & 0x3f
-
-
 def decode_bitlength2(codec_driver: CodecDriver):
     encoded_bits = codec_driver.bit_buffer
     decoded_symbols = []
@@ -47,7 +28,8 @@ def decode_bitlength2(codec_driver: CodecDriver):
     if (mode := encoded_bits.read_int(1)) == 0:
         logger.debug(f"{encoded_bits.position=}")
         logger.debug(
-            f"starting fixed length decode of {codec_driver.code_text.hex(' ')}")
+            f"starting fixed length decode of {codec_driver.code_text.hex(' ')}"
+        )
         db_str = " ".join([f"{int(b):08b}" for b in codec_driver.code_text])
         logger.debug(db_str)
 
@@ -67,7 +49,6 @@ def decode_bitlength2(codec_driver: CodecDriver):
             max_symbol = tmp | (max_symbol << (cNibbles * 4))
             cNibbles += 1
             more_bits = encoded_bits.read_int(1)
-
         bit_width = (max_symbol - min_symbol).bit_length()
         logger.debug(f"{bit_width=} {min_symbol=} {max_symbol=}")
         logger.debug(f"{encoded_bits.position}")
@@ -75,7 +56,9 @@ def decode_bitlength2(codec_driver: CodecDriver):
         logger.debug(f"{db_str[encoded_bits.position:]=}, {total_bits=}")
 
         # Read each fixed-width field and output the value
-        while encoded_bits.position < total_bits or len(decoded_symbols) < expected_values:
+        while (
+            encoded_bits.position < total_bits or len(decoded_symbols) < expected_values
+        ):
             decoded_symbol = encoded_bits.read_int(bit_width)
             decoded_symbol += min_symbol
             decoded_symbols.append(decoded_symbol)
@@ -85,7 +68,8 @@ def decode_bitlength2(codec_driver: CodecDriver):
     else:
         # Write out the mean value
         logger.debug(
-            f"starting variable width decode of {codec_driver.code_text.hex(' ')}")
+            f"starting variable width decode of {codec_driver.code_text.hex(' ')}"
+        )
         mean_value = encoded_bits.read_int(32)
         block_val_bits = encoded_bits.read_int(3)
         block_len_bits = encoded_bits.read_int(3)
@@ -100,9 +84,11 @@ def decode_bitlength2(codec_driver: CodecDriver):
             # Adjust the current field width to the target field width
             delta_field_width = encoded_bits.read_signed_int(block_val_bits)
             current_field_width += delta_field_width
-            while delta_field_width == max_field_decr or delta_field_width == max_field_incr:
-                delta_field_width = encoded_bits.read_signed_int(
-                    block_val_bits)
+            while (
+                delta_field_width == max_field_decr
+                or delta_field_width == max_field_incr
+            ):
+                delta_field_width = encoded_bits.read_signed_int(block_val_bits)
                 current_field_width += delta_field_width
 
             # Read in the run length
@@ -110,15 +96,17 @@ def decode_bitlength2(codec_driver: CodecDriver):
 
             # Read in the data bits for the run
             for j in range(i, i + run_length):
-                decoded_symbols.append(encoded_bits.read_signed_int(
-                    current_field_width) + mean_value)
+                decoded_symbols.append(
+                    encoded_bits.read_signed_int(current_field_width) + mean_value
+                )
 
             # Advance to the end of the run
             i += run_length
         logger.debug("finished variable length debug")
     if encoded_bits.position != total_bits or len(decoded_symbols) != expected_values:
         logger.error(
-            f"{encoded_bits.position=} {total_bits=} {len(decoded_symbols)=} {expected_values=} with {mode=}")
+            f"{encoded_bits.position=} {total_bits=} {len(decoded_symbols)=} {expected_values=} with {mode=}"
+        )
         # raise ValueError("BitlengthCodec2 didn't consume all bits!")
     else:
         logger.debug(f"Decode worked with {mode=}")
