@@ -26,6 +26,12 @@ def decode_bitlength2(codec_driver: CodecDriver):
 
     # Handle fixed width
     if (mode := encoded_bits.read_int(1)) == 0:
+        # num_bits_from_min_symbol = encoded_bits.read_int(6)
+        # num_bits_from_max_symbol = encoded_bits.read_int(6)
+        # min_symbol = encoded_bits.read_signed_int(num_bits_from_min_symbol)
+        # max_symbol = encoded_bits.read_signed_int(num_bits_from_max_symbol)
+        # bit_width = get_bit_field_width(max_symbol - min_symbol)
+
         logger.debug(f"{encoded_bits.position=}")
         logger.debug(
             f"starting fixed length decode of {codec_driver.code_text.hex(' ')}"
