@@ -134,8 +134,8 @@ class VertexShapeLODData:
         """
 
         if version == JtVersion.V10d5:
-            # apparently there is a header here
             _ = ElementHeader.from_bytes(e_bytes)
+        elif version == JtVersion.V9d5: e_bytes.read(2)
         if shape == "Tri-Strip":
             topo_mesh_compressed_lod_data = TopoMeshTopologicallyCompressedLODData.from_bytes(
                 e_bytes, version=version)
