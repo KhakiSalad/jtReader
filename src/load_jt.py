@@ -247,7 +247,7 @@ def main():
         return toc_entry.type.id == 1
 
     def is_shape(toc_entry: TocEntry):
-        return toc_entry.type.id == 6
+        return toc_entry.type.id == 7
 
     lsg_entry = list(filter(is_lsg, jt_toc))
     lsg_entry = lsg_entry[0]

@@ -9,6 +9,7 @@ venv/
 # Distribution and build directories
 dist/
 build/
+tests/data/
 *.egg-info/
 
 # IDE/editor specific files

@@ -26,44 +26,49 @@ def decode_bitlength2(codec_driver: CodecDriver):
 
     # Handle fixed width
     if (mode := encoded_bits.read_int(1)) == 0:
-        # num_bits_from_min_symbol = encoded_bits.read_int(6)
-        # num_bits_from_max_symbol = encoded_bits.read_int(6)
-        # min_symbol = encoded_bits.read_signed_int(num_bits_from_min_symbol)
-        # max_symbol = encoded_bits.read_signed_int(num_bits_from_max_symbol)
-        # bit_width = get_bit_field_width(max_symbol - min_symbol)
+        p = encoded_bits.position
+        num_bits_from_min_symbol = encoded_bits.read_int(6)
+        num_bits_from_max_symbol = encoded_bits.read_int(6)
+        min_symbol = encoded_bits.read_signed_int(num_bits_from_min_symbol)
+        max_symbol = encoded_bits.read_signed_int(num_bits_from_max_symbol)
+        bit_width = get_bit_field_width(max_symbol - min_symbol)
+        if (bit_width != 0):
+            if ((total_bits - encoded_bits.position) / bit_width == expected_values):
+                print("V9.5")
+            else:
+                encoded_bits.position = p
+                logger.debug(f"{encoded_bits.position=}")
+                logger.debug(
+                    f"starting fixed length decode of {codec_driver.code_text.hex(' ')}"
+                )
+                db_str = " ".join([f"{int(b):08b}" for b in codec_driver.code_text])
+                logger.debug(db_str)
 
-        logger.debug(f"{encoded_bits.position=}")
-        logger.debug(
-            f"starting fixed length decode of {codec_driver.code_text.hex(' ')}"
-        )
-        db_str = " ".join([f"{int(b):08b}" for b in codec_driver.code_text])
-        logger.debug(db_str)
+                min_symbol = 0
+                max_symbol = 0
+                cNibbles = 0
+                more_bits = True
+                while more_bits:
+                    tmp = encoded_bits.read_int(4)
+                    min_symbol |= (tmp << (cNibbles * 4))
+                    cNibbles += 1
+                    more_bits = encoded_bits.read_int(1)
+                cNibbles = 0
+                more_bits = True
+                while more_bits:
+                    tmp = encoded_bits.read_int(4)
+                    max_symbol |= (tmp << (cNibbles * 4))
+                    cNibbles += 1
+                    more_bits = encoded_bits.read_int(1)
+                bit_width = (max_symbol - min_symbol).bit_length()
+                logger.debug(f"{bit_width=} {min_symbol=} {max_symbol=}")
+                logger.debug(f"{encoded_bits.position}")
+                db_str = "".join([f"{int(b):08b}" for b in codec_driver.code_text])
+                logger.debug(f"{db_str[encoded_bits.position:]=}, {total_bits=}")
 
-        min_symbol = 0
-        max_symbol = 0
-        cNibbles = 0
-        more_bits = True
-        while more_bits:
-            tmp = encoded_bits.read_int(4)
-            min_symbol = tmp | (min_symbol << (cNibbles * 4))
-            cNibbles += 1
-            more_bits = encoded_bits.read_int(1)
-        cNibbles = 0
-        more_bits = True
-        while more_bits:
-            tmp = encoded_bits.read_int(4)
-            max_symbol = tmp | (max_symbol << (cNibbles * 4))
-            cNibbles += 1
-            more_bits = encoded_bits.read_int(1)
-        bit_width = (max_symbol - min_symbol).bit_length()
-        logger.debug(f"{bit_width=} {min_symbol=} {max_symbol=}")
-        logger.debug(f"{encoded_bits.position}")
-        db_str = "".join([f"{int(b):08b}" for b in codec_driver.code_text])
-        logger.debug(f"{db_str[encoded_bits.position:]=}, {total_bits=}")
-
-        # Read each fixed-width field and output the value
+                # Read each fixed-width field and output the value
         while (
-            encoded_bits.position < total_bits or len(decoded_symbols) < expected_values
+                encoded_bits.position + bit_width < total_bits or len(decoded_symbols) < expected_values
         ):
             decoded_symbol = encoded_bits.read_int(bit_width)
             decoded_symbol += min_symbol
